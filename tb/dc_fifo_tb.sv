@@ -5,7 +5,7 @@ parameter  int CLK_WR  = 52;
 
 parameter  int DWIDTH = 8;
 parameter  int AWIDTH = 3;
-parameter      SHOWAHEAD = "OFF";
+parameter      SHOWAHEAD = "ON";
 
 localparam int ADRESSES = 2**AWIDTH;
 
@@ -140,7 +140,7 @@ bit [DWIDTH-1:0] rd_data;
 int              cntr;
 
 task automatic reading_test;
-  $display("Starting writing test!");
+  $display("Starting reading test!");
   
   rd_req_i <= '1;
   cntr = 0;
@@ -149,7 +149,7 @@ task automatic reading_test;
     @( posedge rd_clk );
   for( int i = 0; i < ADRESSES; i++ )
     begin
-      if ( i == ( ADRESSES - 1 ) ) 
+      if ( ( SHOWAHEAD == "OFF" ) && ( i == ( ADRESSES - 1 ) ) )
         begin
           if ( rd_empty_o != 1 )
             begin

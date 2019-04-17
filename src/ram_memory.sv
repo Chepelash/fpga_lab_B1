@@ -22,17 +22,28 @@ module ram_memory #(
 (* ramstyle = "M10K, no_rw_check" *) logic [DWIDTH-1:0] mem [0:2**AWIDTH-1];
 
 logic [AWIDTH-1:0] rd_pntr_reg;
+logic [AWIDTH-1:0] rd_pntr_reg_next;
 
 // reading mechanism
 generate
   if( SHOWAHEAD == "ON" ) 
     begin
-      assign q_o = mem[rd_pntr_reg];
-      always_latch
+      assign q_o = mem[rd_pntr_reg_next];
+//      always_latch
+//        begin
+//          if( rd_req_i )
+//            rd_pntr_reg <= rd_pntr_i;
+//        end
+      always_ff @( posedge rd_clk_i )
+        rd_pntr_reg <= rd_pntr_reg_next;
+      
+      always_comb
         begin
+          rd_pntr_reg_next = rd_pntr_reg;
           if( rd_req_i )
-            rd_pntr_reg <= rd_pntr_i;
+            rd_pntr_reg_next = rd_pntr_i;
         end
+        
     end
   else if( SHOWAHEAD == "OFF" )
     begin
