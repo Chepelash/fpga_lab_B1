@@ -29,5 +29,7 @@ add wave /dc_fifo_tb/rd_full_o
 add wave /dc_fifo_tb/rd_empty_o
 add wave /dc_fifo_tb/rd_usedw_o
 
+
+
 run -all
 

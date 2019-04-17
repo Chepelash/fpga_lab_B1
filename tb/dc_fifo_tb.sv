@@ -1,10 +1,11 @@
 module dc_fifo_tb;
 
-parameter  int CLK_RD  = 30;
-parameter  int CLK_WR  = 30;
+parameter  int CLK_RD  = 60;
+parameter  int CLK_WR  = 52;
 
 parameter  int DWIDTH = 8;
-parameter  int AWIDTH = 4;
+parameter  int AWIDTH = 3;
+parameter      SHOWAHEAD = "OFF";
 
 localparam int ADRESSES = 2**AWIDTH;
 
@@ -28,12 +29,13 @@ logic              rd_full_o;
 logic [AWIDTH-1:0] rd_usedw_o;
 
 
-mailbox m_box = new(); // mailbox!
+int queue[$];
 
 
 dc_fifo      #(
   .DWIDTH     ( DWIDTH     ),
-  .AWIDTH     ( AWIDTH     )
+  .AWIDTH     ( AWIDTH     ),
+  .SHOWAHEAD  ( SHOWAHEAD  )
 ) DUT         (
   .rd_clk_i   ( rd_clk     ),
   .wr_clk_i   ( wr_clk     ),
@@ -87,7 +89,6 @@ task automatic apply_aclr;
 
 endtask
 
-
 bit [DWIDTH-1:0] wr_data;
 
 task automatic writing_test;
@@ -102,26 +103,13 @@ task automatic writing_test;
           $stop();
         end
       wr_data = $urandom_range(2**DWIDTH - 1); 
-      m_box.put(wr_data);
+      queue.push_back(wr_data);
       data_i <= wr_data;
       
       @( posedge wr_clk );
       
     end
   wr_req_i <= '0;
-  @( posedge wr_clk );
-  @( posedge wr_clk );
-  @( posedge wr_clk );
-  @( posedge wr_clk );
-  @( posedge wr_clk );
-  @( posedge wr_clk );
-  @( posedge wr_clk );
-  @( posedge wr_clk );
-  @( posedge wr_clk );
-  @( posedge wr_clk );
-  @( posedge wr_clk );
-  @( posedge wr_clk );
-  @( posedge wr_clk );
   @( posedge wr_clk );
   
   // fail states
@@ -130,6 +118,10 @@ task automatic writing_test;
       $display("Fail! Expected wr_full flag");
       $stop();
     end
+  // syncronization
+  for( int i = 0; i < 2; i++ )
+    @( posedge rd_clk );
+    
   if( wr_empty_o != '0 )
     begin
       $display("Fail! Unexpected wr_empty flag");
@@ -144,8 +136,64 @@ task automatic writing_test;
 
 endtask
 
-task automatic reading_test;
+bit [DWIDTH-1:0] rd_data;
+int              cntr;
 
+task automatic reading_test;
+  $display("Starting writing test!");
+  
+  rd_req_i <= '1;
+  cntr = 0;
+  @( posedge rd_clk );
+  if( SHOWAHEAD == "OFF" )
+    @( posedge rd_clk );
+  for( int i = 0; i < ADRESSES; i++ )
+    begin
+      if ( i == ( ADRESSES - 1 ) ) 
+        begin
+          if ( rd_empty_o != 1 )
+            begin
+              $display("Fail! Expected rd_empty flag at the end");
+              $stop();
+            end
+        end
+      else if( rd_empty_o == '1 )
+        begin
+          $display("Fail! Unexpected rd_empty flag");
+          $stop();
+        end
+      rd_data = queue.pop_front();
+
+      if( rd_data != q_o )
+        begin
+          $display("Fail! Unexpected data read. cntr = %d. q_o = %b, rd_data = %b", cntr, q_o, rd_data);
+          $stop();
+        end
+      @( posedge rd_clk );
+    end
+  
+  // fail states
+  if( rd_empty_o != '1 )
+    begin
+      $display("Fail! Expected rd_empty flag");
+      $stop();
+    end
+  
+  // syncronization
+  for( int i = 0; i < 2; i++ )
+    @( posedge wr_clk );
+    
+  if( wr_full_o != '0 )
+    begin
+      $display("Fail! Unexpected wr_full flag");
+      $stop();
+    end
+  if( wr_empty_o != '1 )
+    begin
+      $display("Fail! Unexpected wr_empty flag");
+      $stop();
+    end
+  // end fail states
 
 endtask
 
@@ -173,13 +221,13 @@ initial
     
     
     writing_test();
+    $display("Writing test - OK!");
     
     reading_test();
-    
-    
-    for( int i = 0; i < 100; i++ )
-      @( posedge wr_clk );
+    $display("Reading test - OK!");
+
       
+    $display("Everything is OK!");
     $stop();
   end
 
