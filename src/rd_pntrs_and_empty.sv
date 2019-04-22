@@ -23,9 +23,9 @@ logic            rd_empty;
 
 assign rd_pntr_o = rd_pntr_bin[AWIDTH-1:0];
 
-always_ff @( posedge rd_clk_i, negedge aclr_i )
+always_ff @( posedge rd_clk_i, posedge aclr_i )
   begin
-    if( !aclr_i )
+    if( aclr_i )
       begin
         rd_pntr_bin       <= '0;
         rd_pntr_gray_wr_o <= '0;
@@ -43,9 +43,9 @@ assign rd_pntr_gray_next = rd_pntr_bin_next ^ ( rd_pntr_bin_next >> 1 );
 
 assign rd_empty = ( rd_pntr_gray_next == wr_pntr_gray_i );
 
-always_ff @( posedge rd_clk_i, negedge aclr_i )
+always_ff @( posedge rd_clk_i, posedge aclr_i )
   begin
-    if( !aclr_i )
+    if( aclr_i )
       rd_empty_o <= '1;
     else
       rd_empty_o <= rd_empty;
@@ -63,9 +63,9 @@ always_comb
 
 assign wr_pntr_bin_t = wr_pntr_bin[AWIDTH-1:0];
 
-always_ff @( posedge rd_clk_i, negedge aclr_i )
+always_ff @( posedge rd_clk_i, posedge aclr_i )
   begin
-    if( !aclr_i )
+    if( aclr_i )
       rd_usedw_o <= '0;
     else
       begin

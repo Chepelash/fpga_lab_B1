@@ -13,9 +13,9 @@ module sync_r2w #(
 
 logic [AWIDTH:0] rd_pntr_gray_temp;
 
-always_ff @( posedge wr_clk_i, negedge aclr_i )
+always_ff @( posedge wr_clk_i, posedge aclr_i )
   begin
-    if( !aclr_i )
+    if( aclr_i )
       begin
         rd_pntr_gray_temp <= '0;
         rd_pntr_gray_o    <= '0;
@@ -29,9 +29,9 @@ always_ff @( posedge wr_clk_i, negedge aclr_i )
 
   
 logic rd_empty_wr_temp;
-always_ff @( posedge wr_clk_i, negedge aclr_i )
+always_ff @( posedge wr_clk_i, posedge aclr_i )
   begin
-    if( !aclr_i )
+    if( aclr_i )
       begin
         rd_empty_wr_temp <= '1;
         wr_empty_o       <= '1;

@@ -47,9 +47,9 @@ generate
     end
   else if( SHOWAHEAD == "OFF" )
     begin
-      always_ff @( posedge rd_clk_i, negedge aclr_i )
+      always_ff @( posedge rd_clk_i, posedge aclr_i )
         begin
-          if( !aclr_i )
+          if( aclr_i )
             begin
               q_o <= 'x;
             end
