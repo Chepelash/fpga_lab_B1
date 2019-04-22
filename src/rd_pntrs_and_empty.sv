@@ -50,13 +50,12 @@ always_ff @( posedge rd_clk_i, negedge aclr_i )
   end
 
   
-logic [AWIDTH:0]   cntr; // just counter
 logic [AWIDTH:0]   wr_pntr_bin;
 logic [AWIDTH-1:0] wr_pntr_bin_t;
 always_comb
   begin
     wr_pntr_bin = '0;
-    for( cntr = 0; cntr < AWIDTH; cntr++ )
+    for( logic [AWIDTH:0] cntr = 0; cntr < AWIDTH; cntr++ )
       wr_pntr_bin[cntr] = ^( wr_pntr_gray_i >> cntr );
   end
 
