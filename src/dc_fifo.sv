@@ -84,31 +84,32 @@ wr_pntrs_and_full   #(
   .wr_usedw_o        ( wr_usedw_o      )
 );
 
-sync_r2w            #(
-  .AWIDTH            ( AWIDTH          )
-) sync_r2w_1         (
-  .wr_clk_i          ( wr_clk_i        ),
-  .aclr_i            ( aclr_i          ),
+sync           #(
+  .AWIDTH       ( AWIDTH          )
+) sync_r2w      (
+  .clk_i        ( wr_clk_i        ),
+  .aclr_i       ( aclr_i          ),
   
-  .rd_pntr_gray_wr_i ( rd_pntr_gray_wr ),
-  .rd_empty_wr_i     ( rd_empty_o      ),
+  .pntr_gray_i  ( rd_pntr_gray_wr ),
+  .flag_i       ( rd_empty_o      ),
+  .resetval_i   ( 1'b1            ),
   
-  .rd_pntr_gray_o    ( rd_pntr_gray    ),
-  .wr_empty_o        ( wr_empty_o      )
-  
+  .pntr_gray_o  ( rd_pntr_gray    ),
+  .flag_o       ( wr_empty_o      )  
 );
 
-sync_w2r            #(
-  .AWIDTH            ( AWIDTH          )
-) sync_w2r_1         (
-  .rd_clk_i          ( rd_clk_i        ),
-  .aclr_i            ( aclr_i          ),
+sync           #(
+  .AWIDTH       ( AWIDTH          )
+) sync_w2r      (
+  .clk_i        ( rd_clk_i        ),
+  .aclr_i       ( aclr_i          ),
   
-  .wr_pntr_gray_rd_i ( wr_pntr_gray_rd ),
-  .wr_full_rd_i      ( wr_full_o       ),
+  .pntr_gray_i  ( wr_pntr_gray_rd ),
+  .flag_i       ( wr_full_o       ),
+  .resetval_i   ( 1'b0            ),
   
-  .wr_pntr_gray_o    ( wr_pntr_gray    ),
-  .rd_full_o         ( rd_full_o       )
+  .pntr_gray_o  ( wr_pntr_gray    ),
+  .flag_o       ( rd_full_o       )
   
 );
 

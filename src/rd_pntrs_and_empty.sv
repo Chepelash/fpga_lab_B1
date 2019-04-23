@@ -14,7 +14,7 @@ module rd_pntrs_and_empty #(
   output logic [AWIDTH-1:0] rd_usedw_o
 );
 
-localparam logic [AWIDTH-1:0] MAXWORDS = 2**AWIDTH - 1;
+localparam MAXWORDS = 2**AWIDTH - 1;
 
 logic [AWIDTH:0] rd_pntr_bin;     
 logic [AWIDTH:0] rd_pntr_bin_next;
@@ -75,7 +75,7 @@ always_ff @( posedge rd_clk_i, posedge aclr_i )
           end
         else
           begin
-            rd_usedw_o <= MAXWORDS - rd_pntr_o + wr_pntr_bin_t + 1'b1;
+            rd_usedw_o <= MAXWORDS[AWIDTH-1:0] - rd_pntr_o + wr_pntr_bin_t + 1'b1;
           end
       end
   end
