@@ -8,6 +8,7 @@ vlog -sv ../src/ram_memory.sv
 vlog -sv ../src/rd_pntrs_and_empty.sv
 vlog -sv ../src/wr_pntrs_and_full.sv
 vlog -sv ../src/sync.sv
+vlog -sv ../src/bg_transf.sv
 vlog -sv ./dc_fifo_tb.sv
 
 vsim -novopt dc_fifo_tb 

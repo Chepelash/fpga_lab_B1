@@ -1,11 +1,11 @@
 module bg_transf #(
   parameter AWIDTH = 4
 )(
-  input        [AWVAL-1:0] pntr_gray_i,
-  input        [AWVAL-1:0] pntr_bin_i,
+  input        [AWIDTH:0] pntr_gray_i,
+  input        [AWIDTH:0] pntr_bin_i,
   
-  output logic [AWVAL-1:0] pntr_bin_o,
-  output logic [AWVAL-1:0] pntr_gray_o
+  output logic [AWIDTH:0] pntr_bin_o,
+  output logic [AWIDTH:0] pntr_gray_o
 );
 
 localparam AWVAL = AWIDTH + 1;

@@ -6,10 +6,10 @@ module rd_pntrs_and_empty #(
   input                     aclr_i,
   input                     rd_req_i,
   
-  input        [AWVAL-1:0]  wr_pntr_gray_i,
+  input        [AWIDTH:0]   wr_pntr_gray_i,
   
   output logic [AWIDTH-1:0] rd_pntr_o,
-  output logic [AWVAL-1:0]  rd_pntr_gray_wr_o,
+  output logic [AWIDTH:0]   rd_pntr_gray_wr_o,
   output logic              rd_empty_o,
   output logic [AWIDTH-1:0] rd_usedw_o
 );
@@ -24,23 +24,23 @@ logic              rd_empty;
 logic [AWVAL-1:0]  wr_pntr_bin;
 logic [AWIDTH-1:0] wr_pntr_bin_t;
 
-bg_transf #(
-  .AWIDTH      ( AWIDTH            )
-) bg_transf_rd (
-  .pntr_gray_i ( wr_pntr_gray_i    ),
-  .pntr_bin_i  ( rd_pntr_bin_next  ),
-  
-  .pntr_bin_o  ( wr_pntr_bin       ),
-  .pntr_gray_o ( rd_pntr_gray_next )
-);
-//assign rd_pntr_gray_next = rd_pntr_bin_next ^ ( rd_pntr_bin_next >> 1 );
+//bg_transf #(
+//  .AWIDTH      ( AWIDTH            )
+//) bg_transf_rd (
+//  .pntr_gray_i ( wr_pntr_gray_i    ),
+//  .pntr_bin_i  ( rd_pntr_bin_next  ),
+//  
+//  .pntr_bin_o  ( wr_pntr_bin       ),
+//  .pntr_gray_o ( rd_pntr_gray_next )
+//);
+assign rd_pntr_gray_next = rd_pntr_bin_next ^ ( rd_pntr_bin_next >> 1 );
 
-//always_comb
-//  begin
-//    wr_pntr_bin = '0;
-//    for( logic [AWVAL-1:0] cntr = 0; cntr < AWIDTH; cntr++ )
-//      wr_pntr_bin[cntr] = ^( wr_pntr_gray_i >> cntr );
-//  end
+always_comb
+  begin
+    wr_pntr_bin = '0;
+    for( logic [AWVAL-1:0] cntr = 0; cntr < AWIDTH; cntr++ )
+      wr_pntr_bin[cntr] = ^( wr_pntr_gray_i >> cntr );
+  end
 
 assign rd_pntr_o = rd_pntr_bin[AWIDTH-1:0];
 
