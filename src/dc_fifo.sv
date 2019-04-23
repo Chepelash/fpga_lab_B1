@@ -23,14 +23,16 @@ module dc_fifo #(
   output logic [AWIDTH-1:0] rd_usedw_o
 );
 
+localparam AWVAL = AWIDTH + 1;
+
 logic [AWIDTH-1:0] rd_pntr;
-logic [AWIDTH:0]   rd_pntr_gray;
-logic [AWIDTH:0]   rd_pntr_gray_wr;
+logic [AWVAL-1:0]  rd_pntr_gray;
+logic [AWVAL-1:0]  rd_pntr_gray_wr;
 
 logic              wr_full;
 logic [AWIDTH-1:0] wr_pntr;
-logic [AWIDTH:0]   wr_pntr_gray;
-logic [AWIDTH:0]   wr_pntr_gray_rd;
+logic [AWVAL-1:0]  wr_pntr_gray;
+logic [AWVAL-1:0]  wr_pntr_gray_rd;
 
 ram_memory   #(
   .DWIDTH     ( DWIDTH     ),

@@ -6,20 +6,21 @@ module rd_pntrs_and_empty #(
   input                     aclr_i,
   input                     rd_req_i,
   
-  input        [AWIDTH:0]   wr_pntr_gray_i,
+  input        [AWVAL-1:0]  wr_pntr_gray_i,
   
   output logic [AWIDTH-1:0] rd_pntr_o,
-  output logic [AWIDTH:0]   rd_pntr_gray_wr_o,
+  output logic [AWVAL-1:0]  rd_pntr_gray_wr_o,
   output logic              rd_empty_o,
   output logic [AWIDTH-1:0] rd_usedw_o
 );
 
 localparam MAXWORDS = 2**AWIDTH - 1;
+localparam AWVAL = AWIDTH + 1;
 
-logic [AWIDTH:0] rd_pntr_bin;     
-logic [AWIDTH:0] rd_pntr_bin_next;
-logic [AWIDTH:0] rd_pntr_gray_next; // next read pointer in gray code
-logic            rd_empty;
+logic [AWVAL-1:0] rd_pntr_bin;     
+logic [AWVAL-1:0] rd_pntr_bin_next;
+logic [AWVAL-1:0] rd_pntr_gray_next; // next read pointer in gray code
+logic             rd_empty;
 
 assign rd_pntr_o = rd_pntr_bin[AWIDTH-1:0];
 
@@ -52,12 +53,12 @@ always_ff @( posedge rd_clk_i, posedge aclr_i )
   end
 
   
-logic [AWIDTH:0]   wr_pntr_bin;
+logic [AWVAL-1:0]  wr_pntr_bin;
 logic [AWIDTH-1:0] wr_pntr_bin_t;
 always_comb
   begin
     wr_pntr_bin = '0;
-    for( logic [AWIDTH:0] cntr = 0; cntr < AWIDTH; cntr++ )
+    for( logic [AWVAL-1:0] cntr = 0; cntr < AWIDTH; cntr++ )
       wr_pntr_bin[cntr] = ^( wr_pntr_gray_i >> cntr );
   end
 

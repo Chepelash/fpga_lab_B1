@@ -1,18 +1,20 @@
 module sync #(
   parameter AWIDTH = 3
 )(
-  input                   clk_i,
-  input                   aclr_i,
+  input                    clk_i,
+  input                    aclr_i,
   
-  input        [AWIDTH:0] pntr_gray_i,
-  input                   flag_i,
-  input                   resetval_i,
+  input        [AWVAL-1:0] pntr_gray_i,
+  input                    flag_i,
+  input                    resetval_i,
   
-  output logic [AWIDTH:0] pntr_gray_o,
-  output logic            flag_o
+  output logic [AWVAL-1:0] pntr_gray_o,
+  output logic             flag_o
 );
 
-logic [AWIDTH:0] pntr_gray_temp;
+localparam AWVAL = AWIDTH + 1;
+
+logic [AWVAL-1:0] pntr_gray_temp;
 
 always_ff @( posedge clk_i, posedge aclr_i )
   begin
