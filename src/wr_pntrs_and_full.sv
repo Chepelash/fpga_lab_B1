@@ -17,10 +17,33 @@ module wr_pntrs_and_full #(
 localparam MAXWORDS = 2**AWIDTH - 1;
 localparam AWVAL = AWIDTH + 1;
 
-logic [AWVAL-1:0] wr_pntr_bin;     
-logic [AWVAL-1:0] wr_pntr_bin_next;
-logic [AWVAL-1:0] wr_pntr_gray_next;
-logic             wr_full;
+logic [AWVAL-1:0]  wr_pntr_bin;     
+logic [AWVAL-1:0]  wr_pntr_bin_next;
+logic [AWVAL-1:0]  wr_pntr_gray_next;
+logic              wr_full;
+logic [AWVAL-1:0]  rd_pntr_bin;
+logic [AWIDTH-1:0] rd_pntr_bin_t;
+
+bg_transf #(
+  .AWIDTH      ( AWIDTH            )
+) bg_transf_wr (
+  .pntr_gray_i ( rd_pntr_gray_i    ),
+  .pntr_bin_i  ( wr_pntr_bin_next  ),
+  
+  .pntr_bin_o  ( rd_pntr_bin       ),
+  .pntr_gray_o ( wr_pntr_gray_next )
+);
+//assign wr_pntr_gray_next = wr_pntr_bin_next ^ ( wr_pntr_bin_next >> 1 );
+
+//always_comb
+//  begin
+//    rd_pntr_bin = '0;
+//    for( logic [AWVAL-1:0] cntr = 0; cntr < AWIDTH; cntr++ )
+//      rd_pntr_bin[cntr] = ^( rd_pntr_gray_i >> cntr );
+//  end
+
+
+
 
 assign wr_pntr_o = wr_pntr_bin[AWIDTH-1:0];
 
@@ -39,7 +62,7 @@ always_ff @( posedge wr_clk_i, posedge aclr_i )
   end
 
 assign wr_pntr_bin_next  = wr_pntr_bin + ( wr_req_i & ~wr_full_o );
-assign wr_pntr_gray_next = wr_pntr_bin_next ^ ( wr_pntr_bin_next >> 1 );
+
 
 assign wr_full = ( wr_pntr_gray_next == {~rd_pntr_gray_i[AWIDTH:AWIDTH-1],
                                           rd_pntr_gray_i[AWIDTH-2:0]} );
@@ -53,14 +76,7 @@ always_ff @( posedge wr_clk_i, posedge aclr_i )
       wr_full_o <= wr_full;
   end
 
-logic [AWVAL-1:0]  rd_pntr_bin;
-logic [AWIDTH-1:0] rd_pntr_bin_t;
-always_comb
-  begin
-    rd_pntr_bin = '0;
-    for( logic [AWVAL-1:0] cntr = 0; cntr < AWIDTH; cntr++ )
-      rd_pntr_bin[cntr] = ^( rd_pntr_gray_i >> cntr );
-  end
+
 
 assign rd_pntr_bin_t = rd_pntr_bin[AWIDTH-1:0];
 
