@@ -24,23 +24,23 @@ logic              wr_full;
 logic [AWVAL-1:0]  rd_pntr_bin;
 logic [AWIDTH-1:0] rd_pntr_bin_t;
 
-//bg_transf #(
-//  .AWIDTH      ( AWIDTH            )
-//) bg_transf_wr (
-//  .pntr_gray_i ( rd_pntr_gray_i    ),
-//  .pntr_bin_i  ( wr_pntr_bin_next  ),
-//  
-//  .pntr_bin_o  ( rd_pntr_bin       ),
-//  .pntr_gray_o ( wr_pntr_gray_next )
-//);
-assign wr_pntr_gray_next = wr_pntr_bin_next ^ ( wr_pntr_bin_next >> 1 );
-
-always_comb
-  begin
-    rd_pntr_bin = '0;
-    for( logic [AWVAL-1:0] cntr = 0; cntr < AWIDTH; cntr++ )
-      rd_pntr_bin[cntr] = ^( rd_pntr_gray_i >> cntr );
-  end
+bg_transf #(
+  .AWIDTH      ( AWIDTH            )
+) bg_transf_wr (
+  .pntr_gray_i ( rd_pntr_gray_i    ),
+  .pntr_bin_i  ( wr_pntr_bin_next  ),
+  
+  .pntr_bin_o  ( rd_pntr_bin       ),
+  .pntr_gray_o ( wr_pntr_gray_next )
+);
+//assign wr_pntr_gray_next = wr_pntr_bin_next ^ ( wr_pntr_bin_next >> 1 );
+//
+//always_comb
+//  begin
+//    rd_pntr_bin = '0;
+//    for( logic [AWVAL-1:0] cntr = 0; cntr < AWIDTH; cntr++ )
+//      rd_pntr_bin[cntr] = ^( rd_pntr_gray_i >> cntr );
+//  end
 
 
 

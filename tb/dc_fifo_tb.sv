@@ -5,7 +5,7 @@ parameter  int CLK_WR  = 52;
 
 parameter  int DWIDTH = 8;
 parameter  int AWIDTH = 3;
-parameter      SHOWAHEAD = "ON";
+parameter      SHOWAHEAD = "OFF";
 
 localparam int ADRESSES = 2**AWIDTH;
 
@@ -82,9 +82,9 @@ endtask
 
 task automatic apply_aclr;
   
-  aclr <= 1'b0;
-  @( posedge wr_clk );
   aclr <= 1'b1;
+  @( posedge wr_clk );
+  aclr <= 1'b0;
   @( posedge wr_clk );
 
 endtask
@@ -199,7 +199,7 @@ endtask
 
 
 task automatic init;
-  aclr     <= '1;
+  aclr     <= '0;
   rd_clk   <= '1;
   wr_clk   <= '1;
   rd_req_i <= '0;
