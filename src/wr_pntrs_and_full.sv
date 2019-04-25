@@ -80,22 +80,30 @@ always_ff @( posedge wr_clk_i, posedge aclr_i )
 
 assign rd_pntr_bin_t = rd_pntr_bin[AWIDTH-1:0];
 
-always_ff @( posedge wr_clk_i, posedge aclr_i )
+
+always_comb
   begin
-    if( aclr_i )
-      wr_usedw_o <= '0;
+    if( wr_pntr_o >= rd_pntr_bin_t )
+      wr_usedw_o = wr_pntr_o - rd_pntr_bin_t;
     else
-      begin
-        if( wr_pntr_o >= rd_pntr_bin_t )
-          begin
-            wr_usedw_o <= wr_pntr_o - rd_pntr_bin_t;
-          end
-        else
-          begin
-            wr_usedw_o <= MAXWORDS[AWIDTH-1:0] - rd_pntr_bin_t + wr_pntr_o + 1'b1;
-          end
-      end
+      wr_usedw_o = MAXWORDS[AWIDTH-1:0] - rd_pntr_bin_t + wr_pntr_o + 1'b1;
   end
+//always_ff @( posedge wr_clk_i, posedge aclr_i )
+//  begin
+//    if( aclr_i )
+//      wr_usedw_o <= '0;
+//    else
+//      begin
+//        if( wr_pntr_o >= rd_pntr_bin_t )
+//          begin
+//            wr_usedw_o <= wr_pntr_o - rd_pntr_bin_t;
+//          end
+//        else
+//          begin
+//            wr_usedw_o <= MAXWORDS[AWIDTH-1:0] - rd_pntr_bin_t + wr_pntr_o + 1'b1;
+//          end
+//      end
+//  end
 
 
 endmodule
