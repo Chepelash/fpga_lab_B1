@@ -5,7 +5,7 @@ parameter  int CLK_WR  = 52;
 
 parameter  int DWIDTH = 8;
 parameter  int AWIDTH = 3;
-parameter      SHOWAHEAD = "OFF";
+parameter      SHOWAHEAD = "ON";
 
 localparam int ADRESSES = 2**AWIDTH;
 
@@ -203,9 +203,62 @@ task automatic init;
   rd_clk   <= '1;
   wr_clk   <= '1;
   rd_req_i <= '0;
-  wr_req_i <= '0;  
-  
+  wr_req_i <= '0;
 endtask
+
+task write_fifo_data( mailbox ref_data );
+logic [DWIDTH-1:0] next_ref_data;
+  forever
+    begin
+      @( posedge wr_clk )
+      if( !wr_full_o )
+        begin
+          next_ref_data = $urandom_range(2**DWIDTH - 1);
+          ref_data.put( next_ref_data );
+          data_i <= next_ref_data;
+          wr_req_i <= 1'b1;
+        end
+      else
+        begin
+          while( !wr_full_o )
+            @( posedge wr_clk );
+        end
+    end
+endtask
+
+// Working only with SHOWAHEAD mod for now!
+task collect_fifo_data( mailbox read_data );
+  forever
+    begin
+      @( posedge rd_clk );
+      if( !rd_empty_o )
+        begin
+          read_data.put( q_o );
+          rd_req_i <= 1'b1;
+        end
+      else
+        rd_req_i <= 1'b1;
+    end
+endtask
+
+task check_data( mailbox read_data, mailbox ref_data );
+logic [DWIDTH-1:0] next_ref_data;
+logic [DWIDTH-1:0] next_dut_data;
+
+  forever
+    begin
+      ref_data.get( next_ref_data );
+      read_data.get( next_dut_data );
+      if( next_ref_data !== next_dut_data )
+        begin
+          $error( "Data mismatch!\n\tExpected %x\n\tRead %x" , next_ref_data, next_dut_data );
+          $stop();
+        end
+    end
+endtask
+
+mailbox ref_data;
+mailbox dut_data;
 
 initial
   begin
@@ -226,7 +279,19 @@ initial
     reading_test();
     $display("Reading test - OK!");
 
-      
+    ref_data = new();
+    dut_data = new();
+
+    init();
+    apply_aclr();
+
+    fork
+      write_fifo_data( ref_data );
+      collect_fifo_data( dut_data );
+      check_data( dut_data, ref_data );
+    join
+    // For now testbench will never end!
+    // TODO: Added check for timeout and test finish conditions
     $display("Everything is OK!");
     $stop();
   end
