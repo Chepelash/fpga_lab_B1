@@ -104,10 +104,14 @@ task automatic writing_test;
         end
       wr_data = $urandom_range(2**DWIDTH - 1); 
       queue.push_back(wr_data);
-      data_i <= wr_data;
+      data_i <= wr_data;  
       
       @( posedge wr_clk );
-      
+      if( i != wr_usedw_o )
+        begin
+          $display("Fail! Wrond wr_usedw calculation. i = %d; wr_usedw = %d", i, wr_usedw_o);
+          $stop();
+        end
     end
   wr_req_i <= '0;
   @( posedge wr_clk );
@@ -116,6 +120,11 @@ task automatic writing_test;
   if( wr_full_o != '1 )
     begin
       $display("Fail! Expected wr_full flag");
+      $stop();
+    end
+  if( wr_usedw_o != '0 )
+    begin
+      $display("Fail! Expected wr_usedw == 0.");
       $stop();
     end
   // syncronization
@@ -130,6 +139,11 @@ task automatic writing_test;
   if( rd_empty_o != '0 )
     begin
       $display("Fail! Unexpected rd_empty flag");
+      $stop();
+    end
+  if( rd_usedw_o != 0 )
+    begin
+      $display("Fail! Expected rd_usedw == 0.");
       $stop();
     end
   // end fail states
@@ -169,13 +183,36 @@ task automatic reading_test;
           $display("Fail! Unexpected data read. cntr = %d. q_o = %b, rd_data = %b", cntr, q_o, rd_data);
           $stop();
         end
-      @( posedge rd_clk );
+        /////////////
+      if( SHOWAHEAD == "OFF" )
+        begin
+          if( ( ADRESSES - 1 - i ) != rd_usedw_o )
+            begin
+              $display("Fail! Wrond rd_usedw calculation. ( ADRESSES - 1 - i ) = %d; rd_usedw = %d", ADRESSES - 1 - i, rd_usedw_o);
+              $stop();
+            end
+        end
+        //////////
+      @( posedge rd_clk ); 
+      if( SHOWAHEAD == "ON" )
+        begin
+          if( ( ADRESSES - 1 - i ) != rd_usedw_o )
+            begin
+              $display("Fail! Wrond rd_usedw calculation. ( ADRESSES - 1 - i ) = %d; rd_usedw = %d", ADRESSES - 1 - i, rd_usedw_o);
+              $stop();
+            end
+        end     
     end
   
   // fail states
   if( rd_empty_o != '1 )
     begin
       $display("Fail! Expected rd_empty flag");
+      $stop();
+    end
+  if( rd_usedw_o != 0 )
+    begin
+      $display("Fail! Expected rd_usedw == 0");
       $stop();
     end
   
@@ -193,7 +230,115 @@ task automatic reading_test;
       $display("Fail! Unexpected wr_empty flag");
       $stop();
     end
+  if( wr_usedw_o != 0 )
+    begin
+      $display("Fail! Expected wr_usedw == 0");
+      $stop();
+    end
   // end fail states
+  rd_req_i <= '0;
+  @( posedge rd_clk );
+
+endtask
+
+task automatic random_write( mailbox mbox );
+
+  int delay;
+  logic [DWIDTH-1:0] inp_data;
+  for( int i = 0; i < 100; i++ )
+    begin      
+      delay = $urandom_range(100);
+      inp_data = $urandom_range(2**DWIDTH - 1);
+      for(int j = 0; j < delay; j++)
+        @( posedge wr_clk );
+
+      wr_req_i <= '1;
+      data_i <= inp_data;
+      if( !wr_full_o )        
+        mbox.put(inp_data);
+      @( posedge wr_clk );
+      wr_req_i <= '0;
+    end
+
+endtask
+
+task automatic check_data( mailbox wrbox, mailbox rdbox );
+  logic [DWIDTH-1:0] wrdata;
+  logic [DWIDTH-1:0] rddata;
+  
+  forever
+    begin
+      wrbox.get( wrdata );
+      rdbox.get( rddata );
+            
+      if( wrdata !== rddata )
+        begin
+          $display("Fail! Data written = %x; data read = %x", wrdata, rddata);
+          $stop();
+        end
+
+    end
+
+endtask
+
+task automatic read_delay( mailbox mbox, int n );
+  for( int i = 0; i < n; i++ )
+    @( posedge rd_clk );  
+  mbox.put( q_o );
+endtask
+
+task automatic random_read( mailbox mbox );
+
+  int delay;
+  
+  for( int i = 0; i < 70; i++ )
+    begin
+      delay = $urandom_range(100);
+      for( int j = 0; j < delay; j++ )
+        @( posedge rd_clk );
+      
+      if( !rd_empty_o )
+        begin
+          if( SHOWAHEAD == "ON" )
+          begin
+              fork
+                read_delay( mbox, 1 );                          
+              join_none
+            end
+          else if( SHOWAHEAD == "OFF" )
+            begin
+              fork
+                read_delay( mbox, 2 );                          
+              join_none
+            end
+        end
+      
+      rd_req_i <= '1;            
+        
+      @( posedge rd_clk );      
+      rd_req_i <= '0;
+    end
+
+endtask
+
+mailbox rdbox;
+mailbox wrbox;
+
+task automatic random_test;  
+  rdbox = new();
+  wrbox = new();
+  
+  $display("Starting random tests");
+  
+  fork
+    check_data( wrbox, rdbox );
+  join_none
+  
+  fork
+    random_write( wrbox );
+    random_read( rdbox );    
+  join
+  
 
 endtask
 
@@ -226,7 +371,9 @@ initial
     reading_test();
     $display("Reading test - OK!");
 
-      
+    random_test();
+    $display("Random test - OK!");
+    
     $display("Everything is OK!");
     $stop();
   end
