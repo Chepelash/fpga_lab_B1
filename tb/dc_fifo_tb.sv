@@ -254,19 +254,24 @@ task automatic random_write( mailbox mbox );
 
       wr_req_i <= '1;
       data_i <= inp_data;
+      
+      @( posedge wr_clk );
       if( !wr_full_o )        
         mbox.put(inp_data);
-      @( posedge wr_clk );
       wr_req_i <= '0;
     end
 
 endtask
 
+
+bit stop_rt;
+
 task automatic check_data( mailbox wrbox, mailbox rdbox );
   logic [DWIDTH-1:0] wrdata;
   logic [DWIDTH-1:0] rddata;
   
-  forever
+  stop_rt = 0;
+  while( !stop_rt )
     begin
       wrbox.get( wrdata );
       rdbox.get( rddata );
@@ -275,15 +280,15 @@ task automatic check_data( mailbox wrbox, mailbox rdbox );
         begin
           $display("Fail! Data written = %x; data read = %x", wrdata, rddata);
           $stop();
-        end
-
+        end      
     end
+
 
 endtask
 
-task automatic read_delay( mailbox mbox, int n );
-  for( int i = 0; i < n; i++ )
-    @( posedge rd_clk );  
+task automatic read_delay( mailbox mbox );
+  
+  @( posedge rd_clk );  
   mbox.put( q_o );
 endtask
 
@@ -293,29 +298,27 @@ task automatic random_read( mailbox mbox );
   
   for( int i = 0; i < 70; i++ )
     begin
+    
       delay = $urandom_range(100);
       for( int j = 0; j < delay; j++ )
         @( posedge rd_clk );
-      
+        
+      rd_req_i <= '1;
+      @( posedge rd_clk );
       if( !rd_empty_o )
         begin
           if( SHOWAHEAD == "ON" )
           begin
-              fork
-                read_delay( mbox, 1 );                          
-              join_none
+              mbox.put( q_o );
             end
           else if( SHOWAHEAD == "OFF" )
             begin
               fork
-                read_delay( mbox, 2 );                          
+                read_delay( mbox );                          
               join_none
             end
-        end
-      
-      rd_req_i <= '1;            
-        
-      @( posedge rd_clk );      
+        end      
+    
       rd_req_i <= '0;
     end
 
@@ -338,10 +341,70 @@ task automatic random_test;
     random_write( wrbox );
     random_read( rdbox );    
   join
-  
+  stop_rt = 1;
 
 endtask
 
+
+task automatic const_write( mailbox mbox );
+  logic [DWIDTH-1:0] data;
+  @( posedge wr_clk );
+  wr_req_i <= '1;
+  for( int i = 0; i < 100; i++ )
+    begin
+      data = $urandom_range(2**DWIDTH - 1);
+      data_i <= data;
+      @( posedge wr_clk );
+      if( !wr_full_o )
+        mbox.put( data );
+      
+    end
+  wr_req_i <= '0;
+endtask
+
+
+task automatic const_read( mailbox mbox );
+  
+  @( posedge rd_clk );
+  rd_req_i <= '1;
+  
+  for( int i = 0; i < 100; i++ )
+    begin
+      @( posedge rd_clk );
+      if( !rd_empty_o )
+        begin
+          if( SHOWAHEAD == "ON" )
+          begin
+            mbox.put( q_o );
+          end
+          else if( SHOWAHEAD == "OFF" )
+            begin
+              fork
+                read_delay( mbox );
+              join_none
+            end
+        end
+    end
+  rd_req_i <= '0;
+endtask
+
+task automatic constop_test;
+  rdbox = new();
+  wrbox = new();
+  
+  apply_aclr();
+  $display("Starting constop tests");
+  
+  fork
+    check_data( wrbox, rdbox );
+  join_none
+  
+  fork
+    const_write( wrbox );
+    const_read( rdbox );
+  join
+  
+endtask
 
 task automatic init;
   aclr     <= '0;
@@ -373,6 +436,9 @@ initial
 
     random_test();
     $display("Random test - OK!");
+    
+    constop_test();
+    $display("Constant operation test - OK!");
     
     $display("Everything is OK!");
     $stop();
