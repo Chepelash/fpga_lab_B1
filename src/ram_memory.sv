@@ -29,17 +29,6 @@ generate
   if( SHOWAHEAD == "ON" ) 
     begin
       assign q_o = mem[rd_pntr_i];
-
-//      always_ff @( posedge rd_clk_i )
-//        rd_pntr_reg <= rd_pntr_reg_next;
-//      
-//      always_comb
-//        begin
-//          rd_pntr_reg_next = rd_pntr_reg;
-//          if( rd_req_i )
-//            rd_pntr_reg_next = rd_pntr_i;
-//        end
-        
     end
   else if( SHOWAHEAD == "OFF" )
     begin

@@ -30,20 +30,6 @@ always_ff @( posedge clk_i, posedge aclr_i )
       end
   end
   
-//logic flag_temp;
-//always_ff @( posedge clk_i, posedge aclr_i )
-//  begin
-//    if( aclr_i )
-//      begin
-//        flag_temp <= resetval_i;
-//        flag_o    <= resetval_i;
-//      end
-//    else
-//      begin
-//        flag_temp <= flag_i;
-//        flag_o    <= flag_temp;
-//      end
-//  end
 assign flag_o = flag_i;
 
 endmodule

@@ -57,8 +57,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE src/dc_fifo.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/ram_memory.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/rd_pntrs_and_empty.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/wr_pntrs_and_full.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/sync_r2w.sv
-set_global_assignment -name SYSTEMVERILOG_FILE src/sync_w2r.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/sync.sv
 set_global_assignment -name SYSTEMVERILOG_FILE src/dc_fifo_wrap.sv
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

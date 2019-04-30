@@ -15,7 +15,7 @@ module rd_pntrs_and_empty #(
 );
 
 localparam MAXWORDS = 2**AWIDTH - 1;
-localparam AWVAL = AWIDTH + 1;
+localparam AWVAL    = AWIDTH + 1;
 
 logic [AWVAL-1:0]  rd_pntr_bin;     
 logic [AWVAL-1:0]  rd_pntr_bin_next;
@@ -33,14 +33,6 @@ bg_transf #(
   .pntr_bin_o  ( wr_pntr_bin       ),
   .pntr_gray_o ( rd_pntr_gray_next )
 );
-//assign rd_pntr_gray_next = rd_pntr_bin_next ^ ( rd_pntr_bin_next >> 1 );
-//
-//always_comb
-//  begin
-//    wr_pntr_bin = '0;
-//    for( logic [AWVAL-1:0] cntr = 0; cntr < AWIDTH; cntr++ )
-//      wr_pntr_bin[cntr] = ^( wr_pntr_gray_i >> cntr );
-//  end
 
 assign rd_pntr_o = rd_pntr_bin[AWIDTH-1:0];
 
@@ -58,9 +50,8 @@ always_ff @( posedge rd_clk_i, posedge aclr_i )
       end
   end
 
-assign rd_pntr_bin_next  = rd_pntr_bin + ( rd_req_i & ~rd_empty_o );
 
-
+assign rd_pntr_bin_next = ( rd_req_i & ~rd_empty_o ) ? ( rd_pntr_bin + 1'b1 ) : ( rd_pntr_bin );
 
 assign rd_empty = ( rd_pntr_gray_next == wr_pntr_gray_i );
 
@@ -71,10 +62,7 @@ always_ff @( posedge rd_clk_i, posedge aclr_i )
     else
       rd_empty_o <= rd_empty;
   end
-
   
-
-
 assign wr_pntr_bin_t = wr_pntr_bin[AWIDTH-1:0];
 
 always_comb
@@ -84,21 +72,4 @@ always_comb
     else
       rd_usedw_o = MAXWORDS[AWIDTH-1:0] - rd_pntr_o + wr_pntr_bin_t + 1'b1;
   end
-//always_ff @( posedge rd_clk_i, posedge aclr_i )
-//  begin
-//    if( aclr_i )
-//      rd_usedw_o <= '0;
-//    else
-//      begin
-//        if( wr_pntr_bin_t >= rd_pntr_o )
-//          begin
-//            rd_usedw_o <= wr_pntr_bin_t - rd_pntr_o;
-//          end
-//        else
-//          begin
-//            rd_usedw_o <= MAXWORDS[AWIDTH-1:0] - rd_pntr_o + wr_pntr_bin_t + 1'b1;
-//          end
-//      end
-//  end
-
 endmodule

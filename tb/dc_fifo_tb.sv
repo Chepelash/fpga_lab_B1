@@ -5,7 +5,7 @@ parameter  int CLK_WR  = 52;
 
 parameter  int DWIDTH = 8;
 parameter  int AWIDTH = 3;
-parameter      SHOWAHEAD = "OFF";
+parameter      SHOWAHEAD = "ON";
 
 localparam int ADRESSES = 2**AWIDTH;
 
